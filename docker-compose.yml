@@ -1,12 +1,14 @@
+name: whatsmeow-mqtt-bridge
+
 services:
   bridge:
     build: .
-    env_file: .env
-    restart: unless-stopped
     volumes:
       - whatsapp-data:/data
+    env_file: .env
     ports:
-      - "3000:3000"
+      - '3000:3000'
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "/bridge", "--healthcheck"]
 
