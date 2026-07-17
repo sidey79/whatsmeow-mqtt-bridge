@@ -1,0 +1,4 @@
+services:
+  bridge:
+    network_mode: host
+    ports: []

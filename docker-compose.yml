@@ -1,0 +1,14 @@
+services:
+  bridge:
+    build: .
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - whatsapp-data:/data
+    ports:
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "/bridge", "--healthcheck"]
+
+volumes:
+  whatsapp-data:

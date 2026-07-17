@@ -1,0 +1,20 @@
+{
+  "name": "whatsmeow-mqtt-bridge",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached"
+  ],
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "CGO_ENABLED": "0"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["golang.go"]
+    }
+  }
+}
