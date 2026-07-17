@@ -107,6 +107,78 @@ msg push @rr_Beispiel Hallo über ROOMMATE
 
 Die Empfängernummer muss 6 bis 15 Ziffern enthalten und ohne führendes `+`, Leerzeichen oder Bindestriche angegeben werden. Der Text darf Leerzeichen und Unicode-Zeichen enthalten. Das Device verwendet das bereits zugeordnete `MQTT2_FHEM_Server` als IODev; bei einem anderen Namen muss das Attribut `IODev` entsprechend angepasst werden.
 
+## PostgreSQL
+
+SQLite bleibt der Default. Für eine bestehende PostgreSQL-Instanz kann entweder eine eigene Datenbank oder ein eigenes Schema in der FHEM-Datenbank verwendet werden. Der Bridge-Benutzer benötigt keine PostgreSQL-Administratorrechte; Administratorrechte werden nur einmalig zum Einspielen der Provisionierungsdatei benötigt.
+
+### Eigene Datenbank anlegen
+
+```sh
+psql -U postgres -d postgres \
+  -v bridge_user=whatsmeow_bridge \
+  -v bridge_password='EIN_STARKES_PASSWORT' \
+  -v bridge_database=whatsmeow_bridge \
+  -f deploy/postgres/create-database.sql
+```
+
+Danach konfigurieren:
+
+```env
+WA_DB_DRIVER=postgres
+WA_DB_HOST=postgres
+WA_DB_PORT=5432
+WA_DB_NAME=whatsmeow_bridge
+WA_DB_USER=whatsmeow_bridge
+WA_DB_PASSWORD_FILE=/run/secrets/whatsmeow_db_password
+WA_DB_SSLMODE=disable
+```
+
+### Eigenes Schema in der FHEM-Datenbank anlegen
+
+Das Skript muss direkt mit der vorhandenen FHEM-Datenbank verbunden ausgeführt werden:
+
+```sh
+psql -U postgres -d fhem \
+  -v bridge_user=whatsmeow_bridge \
+  -v bridge_password='EIN_STARKES_PASSWORT' \
+  -v bridge_schema=whatsmeow \
+  -f deploy/postgres/create-schema.sql
+```
+
+Zusätzlich setzen:
+
+```env
+WA_DB_NAME=fhem
+WA_DB_SCHEMA=whatsmeow
+```
+
+Whatsmeow führt seine Tabellenmigrationen beim Start innerhalb der ausgewählten Datenbank beziehungsweise des `search_path` selbst aus. Die SQL-Dateien sind erneut ausführbar und aktualisieren bei erneutem Einspielen das Passwort des Bridge-Benutzers.
+
+### Secrets und DSN
+
+Passwörter sollten nicht in `.env` oder Compose-Dateien stehen. Ein lokales Secret anlegen:
+
+```sh
+mkdir -p secrets
+chmod 700 secrets
+openssl rand -base64 32 > secrets/whatsmeow_db_password
+chmod 644 secrets/whatsmeow_db_password
+```
+
+`secrets/` wird von Git und vom Docker-Build ausgeschlossen. Lokales Docker Compose bind-mountet dateibasierte Secrets; deshalb muss die Datei für die Non-Root-UID lesbar sein, während das Verzeichnis selbst nur dem Besitzer zugänglich bleibt. Unterstützte Priorität: `WA_DB_DSN_FILE`, `WA_DB_DSN`, danach die einzelnen `WA_DB_*`-Variablen. `WA_DB_PASSWORD_FILE` hat Vorrang vor `WA_DB_PASSWORD`. DSNs und Passwörter werden nicht geloggt.
+
+Zum lokalen Testen mit einer eigenen PostgreSQL-Instanz:
+
+```sh
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.mqtt.yml \
+  -f docker-compose.postgres.yml \
+  up -d --build
+```
+
+In einem vertrauenswürdigen internen Docker-Netz kann `WA_DB_SSLMODE=disable` verwendet werden. Für externe Verbindungen sollte TLS mit `require`, `verify-ca` oder `verify-full` konfiguriert werden.
+
 ## Betrieb und Migration
 
 `GET /healthz` meldet Prozess-Liveness. `GET /readyz` liefert nur dann 200, wenn MQTT und WhatsApp angemeldet sind. SIGINT/SIGTERM führen zu geordnetem Shutdown. MQTT und Whatsmeow verbinden transient automatisch neu; ein WhatsApp-Logout setzt den Zustand auf `error` und erfordert neues Pairing. Für ein neues Pairing Container stoppen, das dedizierte Datenvolume bewusst sichern oder entfernen und neu starten. Eine alte `whalibmob`-Sitzung kann nicht migriert werden. Bestehende MQTT-Konsumenten verwenden für eine schrittweise Migration `MQTT_BASE_TOPIC=whalibmob`.

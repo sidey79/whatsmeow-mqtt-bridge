@@ -2,7 +2,6 @@ package whatsapp
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -19,7 +18,6 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
-	_ "modernc.org/sqlite"
 
 	"github.com/sven/whatsmeow-mqtt-bridge/internal/model"
 )
@@ -49,22 +47,9 @@ func (c *Client) SetEventHandler(handler EventHandler) {
 	c.mu.Unlock()
 }
 
-func Open(ctx context.Context, path string, handler EventHandler, log *slog.Logger) (*Client, error) {
-	if err := os.MkdirAll(dir(path), 0700); err != nil {
-		return nil, err
-	}
-	db, err := sql.Open("sqlite", "file:"+path+"?_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)")
+func Open(ctx context.Context, storeConfig StoreConfig, handler EventHandler, log *slog.Logger) (*Client, error) {
+	container, device, err := openStore(ctx, storeConfig)
 	if err != nil {
-		return nil, err
-	}
-	container := sqlstore.NewWithDB(db, "sqlite3", nil)
-	if err = container.Upgrade(ctx); err != nil {
-		_ = container.Close()
-		return nil, err
-	}
-	device, err := container.GetFirstDevice(ctx)
-	if err != nil {
-		_ = container.Close()
 		return nil, err
 	}
 	wc := whatsmeow.NewClient(device, nil)
