@@ -6,7 +6,7 @@ require (
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/mdp/qrterminal/v3 v3.2.1
-	go.mau.fi/whatsmeow v0.0.0-20260716095330-85d99080dee8
+	go.mau.fi/whatsmeow v0.0.0-20260718134955-fac667d55293
 	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.38.2
 )
@@ -27,7 +27,7 @@ require (
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
 	go.mau.fi/libsignal v0.2.2 // indirect
-	go.mau.fi/util v0.9.11 // indirect
+	go.mau.fi/util v0.9.12-0.20260717235539-f9ffa7eca58d // indirect
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/exp v0.0.0-20260709172345-9ea1abe57597 // indirect
 	golang.org/x/net v0.57.0 // indirect
