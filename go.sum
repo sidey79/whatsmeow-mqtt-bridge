@@ -62,6 +62,8 @@ go.mau.fi/whatsmeow v0.0.0-20260716095330-85d99080dee8 h1:7RQA3v4pCZcmgHaEQXKfHK
 go.mau.fi/whatsmeow v0.0.0-20260716095330-85d99080dee8/go.mod h1:SX7VdCALDRNx7HZ7mqZxjyi3U7N0QtbSXXXTl8rG5S4=
 go.mau.fi/whatsmeow v0.0.0-20260718134955-fac667d55293 h1:tQ2HAlFBB6KidkNqnTHvQ67WLZPNEZbjAQKviAHJr/M=
 go.mau.fi/whatsmeow v0.0.0-20260718134955-fac667d55293/go.mod h1:Iy/xVSuVU2payR26MB1hv0UZUWRraEn4qKZ7+VRHulg=
+go.mau.fi/whatsmeow v0.0.0-20260722203353-e9a033b24933 h1:7skZGs9q+rWKqYHok4ZufzhKpf6GmTKZnTjSm0aDtus=
+go.mau.fi/whatsmeow v0.0.0-20260722203353-e9a033b24933/go.mod h1:Iy/xVSuVU2payR26MB1hv0UZUWRraEn4qKZ7+VRHulg=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
 go.uber.org/goleak v1.3.0/go.mod h1:CoHD4mav9JJNrW/WLlf7HGZPjdw8EucARQHekz1X6bE=
 golang.org/x/crypto v0.54.0 h1:YLIA59K4fiNzHzjnZt2tUJQjQtUWfWbeHBqKtk3eScw=
