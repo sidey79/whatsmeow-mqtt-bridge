@@ -156,7 +156,10 @@ WA_DB_NAME=fhem
 WA_DB_SCHEMA=whatsmeow
 ```
 
-Whatsmeow führt seine Tabellenmigrationen beim Start innerhalb der ausgewählten Datenbank beziehungsweise des `search_path` selbst aus. Die SQL-Dateien sind erneut ausführbar und aktualisieren bei erneutem Einspielen das Passwort des Bridge-Benutzers.
+Beim Start ruft whatsmeow-mqtt-bridge die Migrationsfunktion des eingebundenen
+Whatsmeow-SQL-Stores auf. Whatsmeow legt beziehungsweise aktualisiert dabei seine Tabellen
+innerhalb der ausgewählten Datenbank beziehungsweise des `search_path`. Die SQL-Dateien sind
+erneut ausführbar und aktualisieren bei erneutem Einspielen das Passwort des Bridge-Benutzers.
 
 ### Secrets und DSN
 

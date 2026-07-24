@@ -69,7 +69,7 @@ func postgresConfig(lookup func(string) (string, bool), get func(string, string)
 		if !postgresIdentifier.MatchString(schema) {
 			return DatabaseConfig{}, fmt.Errorf("WA_DB_SCHEMA is invalid")
 		}
-		query.Set("search_path", schema)
+		query.Set("search_path", `"`+schema+`"`)
 	}
 	u.RawQuery = query.Encode()
 	return DatabaseConfig{Driver: "postgres", DSN: u.String()}, nil

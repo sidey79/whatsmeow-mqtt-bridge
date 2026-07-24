@@ -17,7 +17,7 @@ func TestDatabaseDefaultsToSQLite(t *testing.T) {
 func TestPostgresComponentsAreEscaped(t *testing.T) {
 	cfg, err := databaseFromLookup(lookup(map[string]string{
 		"WA_DB_DRIVER": "postgres", "WA_DB_HOST": "db", "WA_DB_NAME": "fhem", "WA_DB_USER": "bridge",
-		"WA_DB_PASSWORD": "p@ss/word", "WA_DB_SCHEMA": "whatsmeow", "WA_DB_SSLMODE": "disable",
+		"WA_DB_PASSWORD": "p@ss/word", "WA_DB_SCHEMA": "WhatsMeow", "WA_DB_SSLMODE": "disable",
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -27,7 +27,7 @@ func TestPostgresComponentsAreEscaped(t *testing.T) {
 		t.Fatal(err)
 	}
 	password, _ := u.User.Password()
-	if u.Host != "db:5432" || u.Path != "/fhem" || u.User.Username() != "bridge" || password != "p@ss/word" || u.Query().Get("search_path") != "whatsmeow" {
+	if u.Host != "db:5432" || u.Path != "/fhem" || u.User.Username() != "bridge" || password != "p@ss/word" || u.Query().Get("search_path") != `"WhatsMeow"` {
 		t.Fatalf("unexpected DSN components: %s", cfg.DSN)
 	}
 }
