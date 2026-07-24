@@ -109,7 +109,11 @@ Die Empfängernummer muss 6 bis 15 Ziffern enthalten und ohne führendes `+`, Le
 
 ## PostgreSQL
 
-SQLite bleibt der Default. Für eine bestehende PostgreSQL-Instanz kann entweder eine eigene Datenbank oder ein eigenes Schema in der FHEM-Datenbank verwendet werden. Der Bridge-Benutzer benötigt keine PostgreSQL-Administratorrechte; Administratorrechte werden nur einmalig zum Einspielen der Provisionierungsdatei benötigt.
+SQLite bleibt der Default. Für eine bestehende PostgreSQL-Instanz kann entweder eine eigene Datenbank oder ein eigenes Schema in der FHEM-Datenbank verwendet werden. Der Bridge-Benutzer benötigt im Normalbetrieb keine PostgreSQL-Administratorrechte; sie werden nur zur Provisionierung und gegebenenfalls zur SQLite-Migration benötigt.
+
+Eine bestehende WhatsApp-Sitzung kann ohne erneutes QR-Pairing von SQLite übernommen werden.
+Dazu die Bridge nicht einfach nur auf `WA_DB_DRIVER=postgres` umstellen, sondern dem
+[Migrationsguide von SQLite zu PostgreSQL](docs/migrate-sqlite-to-postgresql.md) folgen.
 
 ### Eigene Datenbank anlegen
 
