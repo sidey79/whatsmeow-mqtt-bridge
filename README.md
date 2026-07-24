@@ -53,13 +53,13 @@ Dieses Override setzt `MQTT_URL=mqtt://mqtt:1883` für die Bridge. Die Protokoll
 
 ## Konfiguration
 
-Alle Konfiguration kommt aus der Umgebung. `MQTT_URL` (`mqtt`, `mqtts`, `ws` oder `wss`) hat Vorrang vor `MQTT_HOST`/`MQTT_PORT`; `MQTT_USERNAME` hat Vorrang vor `MQTT_USER`. `MQTT_PROTOCOL_VERSION` wählt `3` für MQTT 3.1.1 (Default, insbesondere für FHEM) oder `5` für MQTT 5. Der Default von `MQTT_BASE_TOPIC` ist `whatsmeow-mqtt-bridge`. Für bestehende Installationen kann er auf `whalibmob` gesetzt werden. Weitere Defaults: `WA_DB_PATH=/data/whatsapp_session.db`, `MEDIA_MAX_SIZE_MB=10`, `LOG_LEVEL=info`, `HEALTH_PORT=3000`. `MQTT_CLIENT_ID` sollte je Instanz eindeutig sein.
+Alle Konfiguration kommt aus der Umgebung. `MQTT_URL` (`mqtt`, `mqtts`, `ws` oder `wss`) hat Vorrang vor `MQTT_HOST`/`MQTT_PORT`; `MQTT_USERNAME` hat Vorrang vor `MQTT_USER`. `MQTT_PROTOCOL_VERSION` wählt `3` für MQTT 3.1.1 (Default, insbesondere für FHEM) oder `5` für MQTT 5. Der interne Default von `MQTT_BASE_TOPIC` ist `whatsmeow-mqtt-bridge`; die mitgelieferte `.env.example` verwendet für die FHEM-Installation bewusst den kürzeren Namespace `whatsapp`. Für bestehende Installationen kann auch `whalibmob` gesetzt werden. Ein abschließender Slash wird entfernt. Weitere Defaults: `WA_DB_PATH=/data/whatsapp_session.db`, `MEDIA_MAX_SIZE_MB=10`, `LOG_LEVEL=info`, `HEALTH_PORT=3000`. `MQTT_CLIENT_ID` sollte je Instanz eindeutig sein.
 
 `MEDIA_ALLOWED_HOSTS` ist eine kommaseparierte Allowlist exakter, kleingeschriebener Hostnamen oder IP-Adressen. Ohne Einträge sind Mediendownloads gesperrt. Jeder Redirect wird neu geprüft und DNS wird vor dem fest gebundenen Verbindungsaufbau aufgelöst, wodurch Redirect- und DNS-Rebinding-Ausbrüche verhindert werden. Private und Loopback-Ziele funktionieren nur, wenn ihr Host/IP ausdrücklich eingetragen ist. Downloads sind gestreamt, zeitlich begrenzt und hart größenbegrenzt; Bilder benötigen `image/*`, Dokumente `application/*` oder `text/*`. Temporärdateien werden nach Upload oder Fehler entfernt.
 
 ## MQTT-Kompatibilitätsvertrag
 
-Alle Publishes und Subscriptions nutzen QoS 1; Status ist retained. Commands liegen standardmäßig unter `whatsmeow-mqtt-bridge/cmd/send/text`, `send/image`, `send/document`, `status` und `reconnect`; Events unter `whatsmeow-mqtt-bridge/event/status`, `message`, `delivery`, `error` und `log`. Das Command-Envelope bleibt:
+Alle Publishes und Subscriptions nutzen QoS 1; Status ist retained. Topics beginnen mit dem konfigurierten `MQTT_BASE_TOPIC`. Mit der Beispielkonfiguration liegen Commands unter `whatsapp/cmd/send/text`, `send/image`, `send/document`, `status` und `reconnect`; Events liegen unter `whatsapp/event/status`, `message`, `delivery`, `error` und `log`. Das Command-Envelope bleibt:
 
 ```json
 {"requestId":"req-123","to":"491701234567","payload":{}}
@@ -68,6 +68,26 @@ Alle Publishes und Subscriptions nutzen QoS 1; Status ist retained. Commands lie
 Text nutzt `{"text":"Hallo"}`, Bilder `{"url":"https://example/image.jpg","caption":"optional"}` und Dokumente `{"url":"https://example/file.pdf","title":"optional","fileName":"optional.pdf"}`. Empfänger haben 6–15 Ziffern ohne `+`. JSON wird strikt validiert. Pro Sendebefehl entsteht genau ein Delivery- oder Error-Event. Die Fehlercodes `INVALID_PAYLOAD`, `NOT_READY`, `SEND_FAILED`, `MEDIA_DOWNLOAD_FAILED`, `MEDIA_TOO_LARGE`, `MEDIA_HOST_NOT_ALLOWED`, `SESSION_INVALID` und `WHATSAPP_DISCONNECTED` bleiben reserviert und kompatibel.
 
 Die Statuswerte `starting`, `registered`, `connecting`, `ready`, `disconnected` und `error` bleiben erhalten. LWT ist ein retained `disconnected`-Status. Eingehend werden in Version 1 nur Textnachrichten aus Einzelchats weitergegeben. Eigene Nachrichten, Gruppen, Status/Broadcast, Newsletter, Protokollnachrichten und Medien werden ignoriert. Telefonnummer-JIDs werden als Ziffern ausgegeben; bei nicht auflösbaren LID-Absendern bleibt bewusst die kanonische JID erhalten.
+
+## FHEM MQTT2_DEVICE
+
+Ein vollständiges Beispiel für `MQTT_BASE_TOPIC=whatsapp` liegt unter [`examples/fhem/whatsmeow_mqtt_bridge.cfg`](examples/fhem/whatsmeow_mqtt_bridge.cfg). Die Definition empfängt Status-, Nachrichten-, Delivery- und Fehler-Events, ergänzt den UTF-8-sicheren Setter `sendText` und bindet das Device als Push-Gateway in den FHEM-Befehl `msg` ein.
+
+Direkter Versand:
+
+```text
+set whatsmeow_mqtt_bridge sendText 491701234567 Hallo aus FHEM
+msg push @whatsmeow_mqtt_bridge:491701234567 Hallo über MSG
+```
+
+Für ROOMMATE-Routing wird die Nummer am Bewohner hinterlegt:
+
+```text
+attr rr_Beispiel msgContactPush whatsmeow_mqtt_bridge:491701234567
+msg push @rr_Beispiel Hallo über ROOMMATE
+```
+
+Die Empfängernummer muss 6 bis 15 Ziffern enthalten und ohne führendes `+`, Leerzeichen oder Bindestriche angegeben werden. Der Text darf Leerzeichen und Unicode-Zeichen enthalten. Das Device verwendet das bereits zugeordnete `MQTT2_FHEM_Server` als IODev; bei einem anderen Namen muss das Attribut `IODev` entsprechend angepasst werden.
 
 ## Betrieb und Migration
 
@@ -85,4 +105,4 @@ go test -race ./...
 go vet ./...
 ```
 
-Smoke-Test: mit frischem dediziertem SQLite-Volume starten, QR scannen, einen Einzelchat-Text empfangen und auf `whatsmeow-mqtt-bridge/event/message` prüfen. Danach Text über `whatsmeow-mqtt-bridge/cmd/send/text` senden und Delivery prüfen. Container ohne Löschen des Volumes neu starten und automatische Anmeldung kontrollieren. Abschließend Broker und Internet jeweils kurz unterbrechen und Reconnect, retained Status/LWT sowie `/readyz` prüfen. Bild und Dokument von explizit erlaubten Hosts senden und Größenlimit, nicht erlaubten Host und Redirect auf einen nicht erlaubten Host negativ testen.
+Smoke-Test: mit frischem dediziertem SQLite-Volume starten, QR scannen, einen Einzelchat-Text empfangen und auf `whatsapp/event/message` prüfen. Danach Text über `whatsapp/cmd/send/text` senden und Delivery prüfen. Container ohne Löschen des Volumes neu starten und automatische Anmeldung kontrollieren. Abschließend Broker und Internet jeweils kurz unterbrechen und Reconnect, retained Status/LWT sowie `/readyz` prüfen. Bild und Dokument von explizit erlaubten Hosts senden und Größenlimit, nicht erlaubten Host und Redirect auf einen nicht erlaubten Host negativ testen.
