@@ -19,7 +19,7 @@ Den QR-Code aus den unveränderten Container-Logs in WhatsApp unter **Verknüpft
 Das Multi-Arch-Image für `linux/amd64` und `linux/arm64` wird in der GitHub Container Registry veröffentlicht:
 
 ```text
-ghcr.io/sidey79/whatsmeow-mqtt-bridge:0.1.0
+ghcr.io/sidey79/whatsmeow-mqtt-bridge:0.2.0
 ```
 
 Für einen Stack kann bei ansonsten unveränderter Service-Konfiguration `build: .` durch das Image ersetzt werden:
@@ -27,7 +27,7 @@ Für einen Stack kann bei ansonsten unveränderter Service-Konfiguration `build:
 ```yaml
 services:
   bridge:
-    image: ghcr.io/sidey79/whatsmeow-mqtt-bridge:0.1.0
+    image: ghcr.io/sidey79/whatsmeow-mqtt-bridge:0.2.0
 ```
 
 Bei Releases stehen die vollständige Version sowie Major- und Minor-Tags zur Verfügung. Für reproduzierbare Deployments sollte die vollständige Version verwendet werden; jeder Build von `main` erhält zusätzlich einen unveränderlichen `sha-<commit>`-Tag.
@@ -107,7 +107,104 @@ msg push @rr_Beispiel Hallo über ROOMMATE
 
 Die Empfängernummer muss 6 bis 15 Ziffern enthalten und ohne führendes `+`, Leerzeichen oder Bindestriche angegeben werden. Der Text darf Leerzeichen und Unicode-Zeichen enthalten. Das Device verwendet das bereits zugeordnete `MQTT2_FHEM_Server` als IODev; bei einem anderen Namen muss das Attribut `IODev` entsprechend angepasst werden.
 
+## PostgreSQL
+
+SQLite bleibt der Default. Für eine bestehende PostgreSQL-Instanz kann entweder eine eigene Datenbank oder ein eigenes Schema in der FHEM-Datenbank verwendet werden. Der Bridge-Benutzer benötigt im Normalbetrieb keine PostgreSQL-Administratorrechte; sie werden nur zur Provisionierung und gegebenenfalls zur SQLite-Migration benötigt.
+
+Eine bestehende WhatsApp-Sitzung kann ohne erneutes QR-Pairing von SQLite übernommen werden.
+Dazu die Bridge nicht einfach nur auf `WA_DB_DRIVER=postgres` umstellen, sondern dem
+[Migrationsguide von SQLite zu PostgreSQL](docs/migrate-sqlite-to-postgresql.md) folgen.
+
+### Eigene Datenbank anlegen
+
+```sh
+psql -U postgres -d postgres \
+  -v bridge_user=whatsmeow_bridge \
+  -v bridge_password='EIN_STARKES_PASSWORT' \
+  -v bridge_database=whatsmeow_bridge \
+  -f deploy/postgres/create-database.sql
+```
+
+Danach konfigurieren:
+
+```env
+WA_DB_DRIVER=postgres
+WA_DB_HOST=postgres
+WA_DB_PORT=5432
+WA_DB_NAME=whatsmeow_bridge
+WA_DB_USER=whatsmeow_bridge
+WA_DB_PASSWORD_FILE=/run/secrets/whatsmeow_db_password
+WA_DB_SSLMODE=disable
+```
+
+### Eigenes Schema in der FHEM-Datenbank anlegen
+
+Das Skript muss direkt mit der vorhandenen FHEM-Datenbank verbunden ausgeführt werden:
+
+```sh
+psql -U postgres -d fhem \
+  -v bridge_user=whatsmeow_bridge \
+  -v bridge_password='EIN_STARKES_PASSWORT' \
+  -v bridge_schema=whatsmeow \
+  -f deploy/postgres/create-schema.sql
+```
+
+Zusätzlich setzen:
+
+```env
+WA_DB_NAME=fhem
+WA_DB_SCHEMA=whatsmeow
+```
+
+Beim Start ruft whatsmeow-mqtt-bridge die Migrationsfunktion des eingebundenen
+Whatsmeow-SQL-Stores auf. Whatsmeow legt beziehungsweise aktualisiert dabei seine Tabellen
+innerhalb der ausgewählten Datenbank beziehungsweise des `search_path`. Die SQL-Dateien sind
+erneut ausführbar und aktualisieren bei erneutem Einspielen das Passwort des Bridge-Benutzers.
+
+### Secrets und DSN
+
+Passwörter sollten nicht in `.env` oder Compose-Dateien stehen. Ein lokales Secret anlegen:
+
+```sh
+mkdir -p secrets
+chmod 700 secrets
+openssl rand -base64 32 > secrets/whatsmeow_db_password
+chmod 644 secrets/whatsmeow_db_password
+```
+
+`secrets/` wird von Git und vom Docker-Build ausgeschlossen. Lokales Docker Compose bind-mountet dateibasierte Secrets; deshalb muss die Datei für die Non-Root-UID lesbar sein, während das Verzeichnis selbst nur dem Besitzer zugänglich bleibt. Unterstützte Priorität: `WA_DB_DSN_FILE`, `WA_DB_DSN`, danach die einzelnen `WA_DB_*`-Variablen. `WA_DB_PASSWORD_FILE` hat Vorrang vor `WA_DB_PASSWORD`. DSNs und Passwörter werden nicht geloggt.
+
+Zum lokalen Testen mit einer eigenen PostgreSQL-Instanz:
+
+```sh
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.mqtt.yml \
+  -f docker-compose.postgres.yml \
+  up -d --build
+```
+
+In einem vertrauenswürdigen internen Docker-Netz kann `WA_DB_SSLMODE=disable` verwendet werden. Für externe Verbindungen sollte TLS mit `require`, `verify-ca` oder `verify-full` konfiguriert werden.
+
 ## Betrieb und Migration
+
+### Breaking Change in 0.2.0: fester Compose-Projektname
+
+Die Compose-Dateien verwenden ab dieser Version den Projektnamen `whatsmeow-mqtt-bridge`. Bestehende Installationen, die bisher den Verzeichnisnamen als Compose-Projektnamen verwendet haben, würden dadurch standardmäßig ein neues `whatsapp-data`-Volume erhalten und ihre vorhandene WhatsApp-Sitzung nicht finden.
+
+Vor dem ersten Start der neuen Version muss deshalb der bisherige Projektname explizit gesetzt werden. Der Name steht beispielsweise im Präfix des vorhandenen Volumes `<projektname>_whatsapp-data`:
+
+```sh
+docker volume ls --filter name=whatsapp-data
+```
+
+Den ermittelten Namen anschließend in `.env` eintragen:
+
+```env
+COMPOSE_PROJECT_NAME=<bisheriger-projektname>
+```
+
+`COMPOSE_PROJECT_NAME` hat Vorrang vor dem Top-Level-Feld `name` und sorgt dafür, dass Compose das bestehende Volume weiterverwendet. Vor der Umstellung sollte das Sitzungsvolume zusätzlich gesichert werden. Neuinstallationen benötigen diese Einstellung nicht.
 
 `GET /healthz` meldet Prozess-Liveness. `GET /readyz` liefert nur dann 200, wenn MQTT und WhatsApp angemeldet sind. SIGINT/SIGTERM führen zu geordnetem Shutdown. MQTT und Whatsmeow verbinden transient automatisch neu; ein WhatsApp-Logout setzt den Zustand auf `error` und erfordert neues Pairing. Für ein neues Pairing Container stoppen, das dedizierte Datenvolume bewusst sichern oder entfernen und neu starten. Eine alte `whalibmob`-Sitzung kann nicht migriert werden. Bestehende MQTT-Konsumenten verwenden für eine schrittweise Migration `MQTT_BASE_TOPIC=whalibmob`.
 

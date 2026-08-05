@@ -1,5 +1,6 @@
 .git
 .env
+secrets
 .data
 *.db
 *.db-shm

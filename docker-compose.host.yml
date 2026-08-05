@@ -1,4 +1,6 @@
+name: whatsmeow-mqtt-bridge
+
 services:
   bridge:
-    network_mode: host
     ports: []
+    network_mode: host

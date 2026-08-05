@@ -1,0 +1,41 @@
+name: whatsmeow-mqtt-bridge
+
+services:
+  bridge:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    secrets:
+      - whatsmeow_db_password
+    environment:
+      WA_DB_DRIVER: postgres
+      WA_DB_HOST: postgres
+      WA_DB_PORT: "5432"
+      WA_DB_NAME: whatsmeow_bridge
+      WA_DB_USER: whatsmeow_bridge
+      WA_DB_PASSWORD_FILE: /run/secrets/whatsmeow_db_password
+      WA_DB_SSLMODE: disable
+
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    secrets:
+      - whatsmeow_db_password
+    environment:
+      POSTGRES_DB: whatsmeow_bridge
+      POSTGRES_USER: whatsmeow_bridge
+      POSTGRES_PASSWORD_FILE: /run/secrets/whatsmeow_db_password
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
+
+secrets:
+  whatsmeow_db_password:
+    file: ./secrets/whatsmeow_db_password

@@ -21,6 +21,7 @@ type Config struct {
 	MediaMaxBytes       int64
 	LogLevel            string
 	HealthPort          int
+	Database            DatabaseConfig
 }
 
 func Load() (Config, error) { return FromLookup(os.LookupEnv) }
@@ -72,9 +73,13 @@ func FromLookup(lookup func(string) (string, bool)) (Config, error) {
 			hosts = append(hosts, h)
 		}
 	}
+	database, err := databaseFromLookup(lookup)
+	if err != nil {
+		return Config{}, err
+	}
 	return Config{MQTTURL: mqttURL, MQTTUsername: user, MQTTPassword: get("MQTT_PASSWORD", ""), MQTTBaseTopic: base,
 		MQTTClientID: get("MQTT_CLIENT_ID", "whatsmeow-mqtt-bridge"), MQTTProtocolVersion: protocolVersion, WADBPath: get("WA_DB_PATH", "/data/whatsapp_session.db"),
-		MediaAllowedHosts: hosts, MediaMaxBytes: maxMB * 1024 * 1024, LogLevel: level, HealthPort: port}, nil
+		MediaAllowedHosts: hosts, MediaMaxBytes: maxMB * 1024 * 1024, LogLevel: level, HealthPort: port, Database: database}, nil
 }
 
 func NormalizeBaseTopic(s string) (string, error) {

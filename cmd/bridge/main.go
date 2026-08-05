@@ -57,7 +57,7 @@ func run() error {
 	slog.SetDefault(log)
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	wa, err := whatsapp.Open(ctx, cfg.WADBPath, nil, log)
+	wa, err := whatsapp.Open(ctx, whatsapp.StoreConfig{Driver: cfg.Database.Driver, DSN: cfg.Database.DSN}, nil, log)
 	if err != nil {
 		return fmt.Errorf("open WhatsApp store: %w", err)
 	}
