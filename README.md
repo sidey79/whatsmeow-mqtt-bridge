@@ -188,6 +188,24 @@ In einem vertrauenswürdigen internen Docker-Netz kann `WA_DB_SSLMODE=disable` v
 
 ## Betrieb und Migration
 
+### Breaking Change: fester Compose-Projektname
+
+Die Compose-Dateien verwenden ab dieser Version den Projektnamen `whatsmeow-mqtt-bridge`. Bestehende Installationen, die bisher den Verzeichnisnamen als Compose-Projektnamen verwendet haben, würden dadurch standardmäßig ein neues `whatsapp-data`-Volume erhalten und ihre vorhandene WhatsApp-Sitzung nicht finden.
+
+Vor dem ersten Start der neuen Version muss deshalb der bisherige Projektname explizit gesetzt werden. Der Name steht beispielsweise im Präfix des vorhandenen Volumes `<projektname>_whatsapp-data`:
+
+```sh
+docker volume ls --filter name=whatsapp-data
+```
+
+Den ermittelten Namen anschließend in `.env` eintragen:
+
+```env
+COMPOSE_PROJECT_NAME=<bisheriger-projektname>
+```
+
+`COMPOSE_PROJECT_NAME` hat Vorrang vor dem Top-Level-Feld `name` und sorgt dafür, dass Compose das bestehende Volume weiterverwendet. Vor der Umstellung sollte das Sitzungsvolume zusätzlich gesichert werden. Neuinstallationen benötigen diese Einstellung nicht.
+
 `GET /healthz` meldet Prozess-Liveness. `GET /readyz` liefert nur dann 200, wenn MQTT und WhatsApp angemeldet sind. SIGINT/SIGTERM führen zu geordnetem Shutdown. MQTT und Whatsmeow verbinden transient automatisch neu; ein WhatsApp-Logout setzt den Zustand auf `error` und erfordert neues Pairing. Für ein neues Pairing Container stoppen, das dedizierte Datenvolume bewusst sichern oder entfernen und neu starten. Eine alte `whalibmob`-Sitzung kann nicht migriert werden. Bestehende MQTT-Konsumenten verwenden für eine schrittweise Migration `MQTT_BASE_TOPIC=whalibmob`.
 
 Architekturentscheidung: `modernc.org/sqlite` wird ohne CGO genutzt. Die genaue interne Paketaufteilung ist gegenüber dem Plan leicht verdichtet. Strukturierte Logs bleiben ausschließlich auf stdout/stderr; `event/log` wird absichtlich nicht beschrieben, um Pairing- oder Schlüsselmaterial nicht versehentlich dauerhaft zu verteilen.

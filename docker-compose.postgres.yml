@@ -1,3 +1,5 @@
+name: whatsmeow-mqtt-bridge
+
 services:
   bridge:
     depends_on:
