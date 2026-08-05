@@ -1,5 +1,3 @@
-name: whatsmeow-mqtt-bridge
-
 services:
   bridge:
     ports: []
