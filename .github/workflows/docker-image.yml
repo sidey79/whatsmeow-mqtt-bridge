@@ -197,7 +197,6 @@ jobs:
             type=raw,value=${{ needs.prepare.outputs.version }},enable=${{ needs.prepare.outputs.publish_version_tags == 'true' }}
             type=raw,value=${{ needs.prepare.outputs.minor }},enable=${{ needs.prepare.outputs.stable == 'true' && needs.prepare.outputs.publish_version_tags == 'true' }}
             type=raw,value=${{ needs.prepare.outputs.major }},enable=${{ needs.prepare.outputs.stable == 'true' && needs.prepare.outputs.publish_version_tags == 'true' }}
-            type=raw,value=latest,enable=${{ needs.prepare.outputs.stable == 'true' && needs.prepare.outputs.publish_version_tags == 'true' }}
             type=sha,prefix=sha-
 
       - name: Create multi-arch manifest

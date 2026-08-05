@@ -19,7 +19,7 @@ Den QR-Code aus den unveränderten Container-Logs in WhatsApp unter **Verknüpft
 Das Multi-Arch-Image für `linux/amd64` und `linux/arm64` wird in der GitHub Container Registry veröffentlicht:
 
 ```text
-ghcr.io/sidey79/whatsmeow-mqtt-bridge:latest
+ghcr.io/sidey79/whatsmeow-mqtt-bridge:0.1.0
 ```
 
 Für einen Stack kann bei ansonsten unveränderter Service-Konfiguration `build: .` durch das Image ersetzt werden:
@@ -27,10 +27,10 @@ Für einen Stack kann bei ansonsten unveränderter Service-Konfiguration `build:
 ```yaml
 services:
   bridge:
-    image: ghcr.io/sidey79/whatsmeow-mqtt-bridge:latest
+    image: ghcr.io/sidey79/whatsmeow-mqtt-bridge:0.1.0
 ```
 
-Neben `latest` stehen bei Releases die vollständige Version sowie Major- und Minor-Tags zur Verfügung. Jeder Build von `main` erhält zusätzlich einen unveränderlichen `sha-<commit>`-Tag.
+Bei Releases stehen die vollständige Version sowie Major- und Minor-Tags zur Verfügung. Für reproduzierbare Deployments sollte die vollständige Version verwendet werden; jeder Build von `main` erhält zusätzlich einen unveränderlichen `sha-<commit>`-Tag.
 
 Die Basisdatei startet ausschließlich die Bridge. Für FHEM `MQTT_URL` in `.env` auf den im FHEM-Netzwerk erreichbaren MQTT-Endpunkt setzen und das lokale Netzwerk wie folgt anbinden.
 
