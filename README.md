@@ -14,6 +14,24 @@ docker compose logs -f bridge
 
 Den QR-Code aus den unveränderten Container-Logs in WhatsApp unter **Verknüpfte Geräte** scannen. QR-Inhalte, Store-Schlüssel und Pairing-Daten werden nie über MQTT publiziert. Das Volume `whatsapp-data` muss erhalten bleiben. `WA_PHONE` wird nicht benötigt.
 
+### Container-Image
+
+Das Multi-Arch-Image für `linux/amd64` und `linux/arm64` wird in der GitHub Container Registry veröffentlicht:
+
+```text
+ghcr.io/sidey79/whatsmeow-mqtt-bridge:latest
+```
+
+Für einen Stack kann bei ansonsten unveränderter Service-Konfiguration `build: .` durch das Image ersetzt werden:
+
+```yaml
+services:
+  bridge:
+    image: ghcr.io/sidey79/whatsmeow-mqtt-bridge:latest
+```
+
+Neben `latest` stehen bei Releases die vollständige Version sowie Major- und Minor-Tags zur Verfügung. Jeder Build von `main` erhält zusätzlich einen unveränderlichen `sha-<commit>`-Tag.
+
 Die Basisdatei startet ausschließlich die Bridge. Für FHEM `MQTT_URL` in `.env` auf den im FHEM-Netzwerk erreichbaren MQTT-Endpunkt setzen und das lokale Netzwerk wie folgt anbinden.
 
 ### Lokales FHEM-Docker-Netzwerk
