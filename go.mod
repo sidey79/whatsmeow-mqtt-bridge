@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/mdp/qrterminal/v3 v3.2.1
 	go.mau.fi/whatsmeow v0.0.0-20260814123134-0dcf1f50f4b1
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.38.2
 )
 
