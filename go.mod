@@ -1,13 +1,13 @@
 module github.com/sven/whatsmeow-mqtt-bridge
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/eclipse/paho.golang v0.23.0
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/mdp/qrterminal/v3 v3.2.1
-	go.mau.fi/whatsmeow v0.0.0-20260816113502-fb386f152837
+	go.mau.fi/whatsmeow v0.0.0-20260821141805-33cfac511629
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.57.0
 )
@@ -31,7 +31,7 @@ require (
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.27 // indirect
 	go.mau.fi/libsignal v0.2.2 // indirect
-	go.mau.fi/util v0.10.0 // indirect
+	go.mau.fi/util v0.10.1-0.20260820140024-eb612d936fde // indirect
 	golang.org/x/crypto v0.55.0 // indirect
 	golang.org/x/exp v0.0.0-20260813180055-c1d0aacb2297 // indirect
 	golang.org/x/net v0.58.0 // indirect
