@@ -4,5 +4,29 @@
     "config:recommended",
     "docker:pinDigests",
     "default:automergeDigest"
+  ],
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths"
+  ],
+  "packageRules": [
+    {
+      "description": "Keine Digest-Updates fuer GitHub Actions (Pinning bleibt aktiv)",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "digest"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Minor- und Patch-Updates automatisch mergen",
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "automerge": true
+    }
   ]
 }
