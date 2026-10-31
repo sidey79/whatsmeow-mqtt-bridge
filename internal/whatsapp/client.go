@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mdp/qrterminal/v3"
+	"github.com/mdp/qrterminal/v4"
 	"go.mau.fi/whatsmeow"
 	waE2E "go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/store/sqlstore"
