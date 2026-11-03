@@ -7,7 +7,7 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.5.1
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/mdp/qrterminal/v3 v3.2.1
-	go.mau.fi/whatsmeow v0.0.0-20261031222104-5d4657a5c29e
+	go.mau.fi/whatsmeow v0.0.0-20261102152715-54038813c47f
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.61.1
 )
