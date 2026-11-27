@@ -3,7 +3,7 @@ module github.com/sven/whatsmeow-mqtt-bridge
 go 1.26.0
 
 require (
-	github.com/eclipse/paho.golang v0.23.0
+	github.com/eclipse/paho.golang v0.24.0
 	github.com/eclipse/paho.mqtt.golang v1.5.2
 	github.com/jackc/pgx/v5 v5.13.0
 	github.com/mdp/qrterminal/v3 v3.2.1
